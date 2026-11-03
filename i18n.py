@@ -129,7 +129,7 @@ _add("tomorrow_word", "tomorrow", "فردا")
 _add("in_n_days", "in {n} days", "{n} روز دیگه")
 _add("use_buttons", "🌸 Just tap a button below 👇", "🌸 کافیه یکی از دکمه‌های پایین رو بزنی 👇")
 _add("cancel", "✖️ Cancel", "✖️ انصراف")
-_add("back", "⬅️ Back", "بازگشت ↩️")
+_add("back", "⬅️ Back", "↩️ بازگشت")
 _add("saved", "💾 Saved ✓", "💾 ذخیره شد ✓")
 
 TZS = [
@@ -643,3 +643,32 @@ _add("bot_description",
      "🔐 اطلاعاتت رمزنگاری می‌شه، فروخته یا به کسی داده نمی‌شه و هر وقت بخوای پاکش می‌کنی.")
 _add("bot_short", "🌙 Private period tracker. 🔐 Encrypted, partner sharing you control.",
      "🌙 ثبت خصوصی پریود. 🔐 رمزنگاری‌شده، اشتراک با پارتنر به انتخاب خودت.")
+
+# ---------------------------------------------------------------- undo, back, calendar switch
+_add("undo", "↩️ Undo", "↩️ برگرد")
+_add("undone", "↩️ Undone. Nothing was saved.", "↩️ برگشت خورد. چیزی ثبت نشد.")
+_add("btn_edit", "✏️ Edit", "✏️ ویرایش")
+_add("btn_it_ended", "✅ It ended", "✅ تموم شد")
+_add("btn_remove_start", "🗑 That start was a mistake", "🗑 این شروع اشتباه بود")
+_add("btn_log_start", "🩸 Log a period start", "🩸 ثبت شروع پریود")
+_add("btn_unsend", "↩️ Unsend", "↩️ پس گرفتن پیام")
+_add("unsent", "↩️ Unsent. Your partner won't see it.", "↩️ پیام پس گرفته شد. پارتنرت نمی‌بینه.")
+_add("unsend_late", "That message is too old to unsend.", "این پیام دیگه قابل پس گرفتن نیست.")
+_add("np_undo", "💞 Small correction: {name}'s period didn't start after all. 🌸",
+     "💞 یه اصلاح کوچیک: پریود {name} هنوز شروع نشده. 🌸")
+_add("cal_switch_g", "📆 Show Gregorian calendar", "📆 نمایش تقویم میلادی")
+_add("cal_switch_j", "📆 Show Solar Hijri calendar", "📆 نمایش تقویم شمسی")
+_add("s_cycle_data", "🔁 Cycle length: {n} (from your data)", "🔁 طول چرخه: {n} (از اطلاعات خودت)")
+_add("s_plen_data", "🩸 Period length: {n} (from your data)", "🩸 طول پریود: {n} (از اطلاعات خودت)")
+_add("note_cycle_data",
+     "ℹ️ From the periods you logged, your cycle is about <b>{n}</b>. Luna always uses your real data first. "
+     "This number only counts while there isn't enough data.",
+     "ℹ️ طبق پریودهایی که ثبت کردی، چرخه‌ات حدوداً <b>{n}</b> هست. لونا همیشه اول از اطلاعات واقعی خودت استفاده می‌کنه. "
+     "این عدد فقط وقتی به کار می‌ره که اطلاعات کافی نباشه.")
+_add("note_plen_data",
+     "ℹ️ From the periods you logged, your period lasts about <b>{n}</b>. Luna always uses your real data first. "
+     "This number only counts while there isn't enough data.",
+     "ℹ️ طبق پریودهایی که ثبت کردی، پریودت حدوداً <b>{n}</b> طول می‌کشه. لونا همیشه اول از اطلاعات واقعی خودت استفاده می‌کنه. "
+     "این عدد فقط وقتی به کار می‌ره که اطلاعات کافی نباشه.")
+_add("lang_changed", "🌐 Language changed ✓", "🌐 زبان عوض شد ✓")
+_add("based_on", "<i>Based on your last {n} cycles.</i>", "<i>بر اساس {n} چرخه آخرت.</i>")

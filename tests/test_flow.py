@@ -317,10 +317,112 @@ def test_privacy_screen(env):
     app, bot = env
     text(app, OWNER, "/start")
     tap(app, OWNER, "lang:en")
-    assert "privacy" in last_buttons(bot)
-    tap(app, OWNER, "privacy")
+    assert "privacy:w" in last_buttons(bot)
+    tap(app, OWNER, "privacy:w")
     out = last_text(bot)
     assert "AES" in out and "github.com/sahandsorouri/luna-period-bot" in out
-    tap(app, OWNER, "lang:fa")
-    tap(app, OWNER, "privacy")
-    assert "رمزنگاری" in last_text(bot)
+    # the privacy page itself keeps a way forward and a way back
+    assert last_buttons(bot) == ["ob:welcome", "onb:go"]
+    tap(app, OWNER, "ob:welcome")
+    assert "Hi, I'm Luna" in last_text(bot)
+
+
+def test_onboarding_back_buttons(env):
+    app, bot = env
+    text(app, OWNER, "/start")
+    tap(app, OWNER, "lang:en")
+    tap(app, OWNER, "onb:go")
+    assert "ob:welcome" in last_buttons(bot)
+    tap(app, OWNER, "tz:onb:1")
+    tap(app, OWNER, "ol:t")
+    assert "ob:last" in last_buttons(bot)
+    tap(app, OWNER, "ob:last")          # went back: the start picked is undone
+    assert handlers.S().get(OWNER).data["periods"] == []
+    tap(app, OWNER, "ol:y")
+    assert len(handlers.S().get(OWNER).data["periods"]) == 1
+
+
+def test_undo_start_and_end(env):
+    app, bot = env
+    make_partner(app, bot)
+    u = handlers.S().get(OWNER)
+    today = handlers.today_for(u)
+    u.data["periods"] = [{"s": (today - timedelta(days=28)).isoformat(),
+                          "e": (today - timedelta(days=24)).isoformat()}]
+    handlers.S().save(u)
+    tap(app, OWNER, "ps:t")
+    assert any(b.startswith("un:s:") for b in last_buttons(bot))
+    undo = [b for b in last_buttons(bot) if b.startswith("un:s:")][0]
+    assert undo.endswith(":1")              # partner was told
+    tap(app, OWNER, undo)
+    assert len(handlers.S().get(OWNER).data["periods"]) == 1
+    assert "didn't start after all" in last_text(bot, PARTNER)
+    assert "Undone" in last_text(bot, OWNER)
+    # end: log a start, end it, undo the end
+    tap(app, OWNER, "ps:y")
+    tap(app, OWNER, "pe:t")
+    undo = [b for b in last_buttons(bot) if b.startswith("un:e:")][0]
+    tap(app, OWNER, undo)
+    assert handlers.S().get(OWNER).data["periods"][-1]["e"] is None
+
+
+def test_calendar_switch_and_back(env):
+    app, bot = env
+    onboard(app, bot, "fa")
+    u = handlers.S().get(OWNER)
+    assert u.cal == "j"
+    today = dates.ymd(handlers.today_for(u))
+    tap(app, OWNER, "ps:pick")
+    assert f"cal:start:sw:{today}" in last_buttons(bot)
+    tap(app, OWNER, f"cal:start:sw:{today}")
+    assert handlers.S().get(OWNER).cal == "g"
+    tap(app, OWNER, "cal:start:x")          # back to the Today/Yesterday picker
+    assert "ps:t" in last_buttons(bot) or "goend" in last_buttons(bot)
+
+
+def test_menu_tap_deleted_and_old_screen_replaced(env):
+    app, bot = env
+    onboard(app, bot)
+    n_del = sum(ep == "deleteMessage" for ep, _ in bot.calls)
+    text(app, OWNER, "📊 Stats")
+    text(app, OWNER, "⚙️ Settings")
+    dels = [d for ep, d in bot.calls if ep == "deleteMessage"][n_del:]
+    assert len(dels) >= 3      # two taps + the previous screen
+
+
+def test_settings_show_data_based_lengths(env):
+    app, bot = env
+    onboard(app, bot)
+    u = handlers.S().get(OWNER)
+    today = handlers.today_for(u)
+    u.data["periods"] = [{"s": (today - timedelta(days=d)).isoformat(),
+                          "e": (today - timedelta(days=d - 3)).isoformat()} for d in (93, 62, 31)]
+    u.data["cycle_hint"] = 35
+    handlers.S().save(u)
+    text(app, OWNER, "⚙️ Settings")
+    rm = [d for ep, d in bot.calls if ep == "sendMessage"][-1]["reply_markup"]
+    labels = [b.text for row in rm.inline_keyboard for b in row]
+    assert any("31 days (from your data)" in x for x in labels)
+    tap(app, OWNER, "st:cyclemenu")
+    assert "your cycle is about <b>31 days</b>" in last_text(bot)
+    assert handlers.status_of(handlers.S().get(OWNER)).cycle_len == 31   # data wins over the 35 hint
+
+
+def test_nudge_unsend(env):
+    app, bot = env
+    make_partner(app, bot)
+    tap(app, OWNER, "nd:hug")
+    assert "ndu" in last_buttons(bot)
+    tap(app, OWNER, "ndu")
+    assert any(ep == "deleteMessage" and d.get("chat_id") == PARTNER for ep, d in bot.calls)
+    assert "Unsent" in last_text(bot, OWNER)
+
+
+def test_partner_help_has_back(env):
+    app, bot = env
+    make_partner(app, bot)
+    text(app, PARTNER, "🌸 How she's doing", name="Ali")
+    tap(app, PARTNER, "phelps", name="Ali")
+    assert last_buttons(bot) == ["ptdy"]
+    tap(app, PARTNER, "ptdy", name="Ali")
+    assert "Sara today" in last_text(bot, PARTNER)
