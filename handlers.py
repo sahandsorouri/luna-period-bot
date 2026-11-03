@@ -116,11 +116,13 @@ async def screen(context, chat: int, text: str, markup=None, bot=None):
     Confirmations and reminders are never removed (see keep())."""
     bot = bot or context.bot
     ud = context.user_data if context is not None else None
-    if ud is not None and ud.get("screen"):
-        await drop(bot, chat, ud.pop("screen"))
     m = await send(bot, chat, text, markup)
+    # the new screen must arrive first; only then the old one goes
     if m is not None and ud is not None:
+        prev = ud.get("screen")
         ud["screen"] = m.message_id
+        if prev:
+            await drop(bot, chat, prev)
     return m
 
 
@@ -204,11 +206,11 @@ async def on_text(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     if fn is None:
         await update.message.reply_text(t(u.lang, "use_buttons"), reply_markup=menu_for(u))
         return
+    await fn(update.message.chat_id, context, u)
     try:
-        await update.message.delete()   # her button tap is noise in the chat
+        await update.message.delete()   # after the reply is there, her button tap is just noise
     except Exception:
         pass
-    await fn(update.message.chat_id, context, u)
 
 
 async def resume(update: Update, context, u: User) -> None:

@@ -426,3 +426,15 @@ def test_partner_help_has_back(env):
     assert last_buttons(bot) == ["ptdy"]
     tap(app, PARTNER, "ptdy", name="Ali")
     assert "Sara today" in last_text(bot, PARTNER)
+
+
+def test_reply_arrives_before_anything_is_deleted(env):
+    app, bot = env
+    onboard(app, bot)
+    text(app, OWNER, "📊 Stats")
+    start = len(bot.calls)
+    text(app, OWNER, "⚙️ Settings")
+    eps = [ep for ep, _ in bot.calls[start:]]
+    first_send = eps.index("sendMessage")
+    assert "deleteMessage" in eps
+    assert all(i > first_send for i, ep in enumerate(eps) if ep == "deleteMessage")
