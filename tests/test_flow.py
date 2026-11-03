@@ -37,7 +37,9 @@ class FakeBot(ExtBot):
             return {"id": 999, "is_bot": True, "first_name": "Luna", "username": "luna_test_bot"}
         if endpoint in ("sendMessage", "editMessageText", "editMessageReplyMarkup", "sendDocument"):
             chat = data.get("chat_id", OWNER)
-            return {"message_id": next(_ids), "date": int(time.time()),
+            mid = next(_ids)
+            data["_id"] = mid
+            return {"message_id": mid, "date": int(time.time()),
                     "chat": {"id": chat, "type": "private"}, "text": str(data.get("text", ""))}
         return True
 
@@ -438,3 +440,22 @@ def test_reply_arrives_before_anything_is_deleted(env):
     first_send = eps.index("sendMessage")
     assert "deleteMessage" in eps
     assert all(i > first_send for i, ep in enumerate(eps) if ep == "deleteMessage")
+
+
+def test_setup_leaves_no_clutter(env):
+    app, bot = env
+    onboard(app, bot)
+    deleted = {d.get("message_id") for ep, d in bot.calls if ep == "deleteMessage"}
+    carriers = [d["_id"] for ep, d in bot.calls if ep == "sendMessage" and d.get("text") == "🌙"]
+    assert carriers and all(c in deleted for c in carriers)     # keyboard carrier removed
+    # her "/start" was removed too
+    assert any(ep == "deleteMessage" and d.get("chat_id") == OWNER for ep, d in bot.calls[:6])
+    # the last thing she sees is the Today screen
+    assert "Today" in last_text(bot)
+
+
+def test_partner_language_pick_turns_into_invite(env):
+    app, bot = env
+    make_partner(app, bot)
+    texts = [m["text"] for m in msgs(bot, PARTNER)]
+    assert not any(t.strip() in ("💾 Saved ✓", "Saved ✓") for t in texts)
