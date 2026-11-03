@@ -626,3 +626,20 @@ _add("leave_confirm", "👋 Stop following {name}'s cycle?", "👋 دنبال ک
 _add("btn_yes_leave", "👋 Yes, stop", "👋 بله، قطع کن")
 _add("left", "👋 Done. You no longer follow {name}.", "👋 انجام شد. دیگه چرخه {name} رو دنبال نمی‌کنی.")
 _add("someone", "your partner", "پارتنرت")
+
+# ---------------------------------------------------------------- bot profile (BotFather)
+_add("bot_description",
+     "🌙 Luna is your private period tracker.\n\n"
+     "🩸 Log your period in one tap\n"
+     "🔔 Know what is coming: next period, PMS days, late alerts\n"
+     "📊 Clear stats about your cycle\n"
+     "💞 Invite your partner if you want. They see only what you choose\n\n"
+     "🔐 Your data is encrypted, never sold, never shared. Delete it any time.",
+     "🌙 لونا ثبت‌کننده خصوصی پریود توئه.\n\n"
+     "🩸 ثبت پریود با یه دکمه\n"
+     "🔔 بدون چی در راهه: پریود بعدی، روزهای پی‌ام‌اس، خبر تأخیر\n"
+     "📊 آمار ساده و روشن از چرخه‌ات\n"
+     "💞 اگه خواستی پارتنرت رو دعوت کن. فقط چیزی رو می‌بینه که خودت انتخاب کنی\n\n"
+     "🔐 اطلاعاتت رمزنگاری می‌شه، فروخته یا به کسی داده نمی‌شه و هر وقت بخوای پاکش می‌کنی.")
+_add("bot_short", "🌙 Private period tracker. 🔐 Encrypted, partner sharing you control.",
+     "🌙 ثبت خصوصی پریود. 🔐 رمزنگاری‌شده، اشتراک با پارتنر به انتخاب خودت.")

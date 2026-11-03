@@ -8,6 +8,7 @@ from telegram.ext import (Application, CallbackQueryHandler, CommandHandler, Mes
 import config
 import handlers
 import notify
+from i18n import t
 from crypto import Crypto, decode_master
 from storage import Store
 
@@ -27,6 +28,14 @@ def build_store() -> Store:
 async def post_init(app: Application) -> None:
     await app.bot.set_my_commands([])           # no slash menu, everything is buttons
     await app.bot.set_chat_menu_button(menu_button=MenuButtonDefault())
+    # profile text people see before they tap Start
+    for lang in ("en", "fa"):
+        code = None if lang == "en" else "fa"
+        try:
+            await app.bot.set_my_description(t(lang, "bot_description"), language_code=code)
+            await app.bot.set_my_short_description(t(lang, "bot_short"), language_code=code)
+        except Exception as e:  # rate limits must not stop the bot
+            logging.getLogger("luna").warning("profile text not set: %s", type(e).__name__)
 
 
 def register(app: Application) -> None:
