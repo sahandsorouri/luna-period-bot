@@ -446,12 +446,17 @@ def test_setup_leaves_no_clutter(env):
     app, bot = env
     onboard(app, bot)
     deleted = {d.get("message_id") for ep, d in bot.calls if ep == "deleteMessage"}
-    carriers = [d["_id"] for ep, d in bot.calls if ep == "sendMessage" and d.get("text") == "🌙"]
-    assert carriers and all(c in deleted for c in carriers)     # keyboard carrier removed
-    # her "/start" was removed too
-    assert any(ep == "deleteMessage" and d.get("chat_id") == OWNER for ep, d in bot.calls[:6])
-    # the last thing she sees is the Today screen
+    kb_lines = [d["_id"] for ep, d in bot.calls if ep == "sendMessage" and "buttons are below" in d.get("text", "")]
+    assert len(kb_lines) == 1 and kb_lines[0] not in deleted      # the keyboard line must stay
+    assert handlers.S().get(OWNER).data["kbmsg"] == kb_lines[0]
+    assert any(ep == "deleteMessage" and d.get("chat_id") == OWNER for ep, d in bot.calls[:6])  # /start gone
     assert "Today" in last_text(bot)
+    # changing language: new keyboard line first, then the old one is removed
+    tap(app, OWNER, "st:lang")
+    kb_lines = [d["_id"] for ep, d in bot.calls if ep == "sendMessage" and "_id" in d
+                and ("buttons are below" in d.get("text", "") or "دکمه‌های لونا" in d.get("text", ""))]
+    deleted = {d.get("message_id") for ep, d in bot.calls if ep == "deleteMessage"}
+    assert len(kb_lines) == 2 and kb_lines[0] in deleted and kb_lines[1] not in deleted
 
 
 def test_partner_language_pick_turns_into_invite(env):

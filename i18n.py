@@ -672,3 +672,4 @@ _add("note_plen_data",
      "این عدد فقط وقتی به کار می‌ره که اطلاعات کافی نباشه.")
 _add("lang_changed", "🌐 Language changed ✓", "🌐 زبان عوض شد ✓")
 _add("based_on", "<i>Based on your last {n} cycles.</i>", "<i>بر اساس {n} چرخه آخرت.</i>")
+_add("kb_ready", "🌸 Your Luna buttons are below 👇", "🌸 دکمه‌های لونا پایین صفحه‌ست 👇")

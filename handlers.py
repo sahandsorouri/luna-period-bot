@@ -151,16 +151,20 @@ async def edit_markup(q, markup) -> None:
             raise
 
 
-async def set_keyboard(bot, chat: int, markup) -> None:
-    """Put the bottom keyboard in place without leaving a message behind.
-    Telegram only sets a keyboard through a message, so send a tiny silent one, then delete it.
-    The keyboard stays after the message is gone."""
-    try:
-        m = await bot.send_message(chat, "🌙", reply_markup=markup, disable_notification=True)
-    except (Forbidden, BadRequest) as e:
-        log.info("keyboard send failed: %s", type(e).__name__)
+async def set_keyboard(bot, chat: int, markup, u: User | None = None) -> None:
+    """Put the bottom keyboard in place.
+    Telegram ties the keyboard to a message: delete that message and the keyboard goes too
+    (checked on a phone 4 Nov). So exactly one short keyboard line stays in the chat.
+    A new one is sent first, then the old one is removed."""
+    text = t(u.lang, "kb_ready") if u else "🌙"
+    m = await send(bot, chat, text, markup)
+    if m is None or u is None:
         return
-    await drop(bot, chat, m.message_id)
+    old = u.data.get("kbmsg")
+    u.data["kbmsg"] = m.message_id
+    S().save(u)
+    if old and old != m.message_id:
+        await drop(bot, chat, old)
 
 
 async def drop_update_message(update: Update) -> None:
@@ -243,7 +247,7 @@ async def resume(update: Update, context, u: User) -> None:
     """Re-show where she left off in onboarding, or the main menu."""
     chat = update.effective_chat.id
     if u.onboarded:
-        await set_keyboard(context.bot, chat, menu_for(u))
+        await set_keyboard(context.bot, chat, menu_for(u), u)
         if u.role == "partner":
             await partner_today(chat, context, u)
         else:
@@ -280,7 +284,7 @@ async def finish_onboarding(bot, chat: int, u: User, open_calendar: bool, contex
     u.onboarded = True
     u.data.pop("onb", None)
     S().save(u)
-    await set_keyboard(bot, chat, menu_for(u))
+    await set_keyboard(bot, chat, menu_for(u), u)
     if open_calendar:
         await show_calendar(chat, context, u, bot=bot)
     else:
@@ -760,7 +764,7 @@ async def on_cb(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
             S().save(u)
             await q.answer(t(lang, "saved"))
             if u.onboarded:
-                await set_keyboard(bot, chat, menu_for(u))
+                await set_keyboard(bot, chat, menu_for(u), u)
                 await edit(q, *today_view(u))
             else:
                 await edit(q, *onb_view(u, u.data.get("onb", "welcome")))
@@ -1036,8 +1040,12 @@ async def on_cb(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         await q.answer()
         if parts[1] == "yes":
             await delete_everything(bot, u)
-            await edit(q, t(L, "deleted"))
-            await set_keyboard(bot, chat, ReplyKeyboardRemove())
+            # the goodbye line itself removes the keyboard, and it stays so the keyboard stays gone
+            await send(bot, chat, t(L, "deleted"), ReplyKeyboardRemove())
+            try:
+                await q.message.delete()
+            except Exception:
+                await edit(q, t(L, "deleted"))
         else:
             text, markup = settings_view(u)
             await edit(q, text, markup)
@@ -1298,7 +1306,7 @@ async def handle_invite(q, context, u: User, action: str, token: str) -> None:
     S().save(u)
     S().create_link(owner_id, u.id, flags)
     await edit(q, t(L, "inv_accepted_partner", name=name_of(owner, L)))
-    await set_keyboard(bot, u.id, kb.partner_kb(L))
+    await set_keyboard(bot, u.id, kb.partner_kb(L), u)
     await send(bot, owner.id, t(owner.lang, "inv_accepted_owner", name=name_of(u, owner.lang)))
 
 
@@ -1395,7 +1403,7 @@ async def handle_settings(q, context, u: User, action: str, arg: str) -> None:
         u.cal = "j" if u.lang == "fa" else "g"
         S().save(u)
         await refresh(t(u.lang, "saved"))
-        await set_keyboard(bot, chat, menu_for(u))  # bottom keyboard in the new language
+        await set_keyboard(bot, chat, menu_for(u), u)  # bottom keyboard in the new language
         return
     if action == "cal":
         u.cal = "g" if u.cal == "j" else "j"
