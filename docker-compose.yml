@@ -1,0 +1,11 @@
+services:
+  luna:
+    build: .
+    container_name: luna
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - DATA_DIR=/data
+      - TZ=UTC
+    volumes:
+      - ./data:/data
